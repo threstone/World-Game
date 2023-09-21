@@ -25,7 +25,7 @@ Enter-Gate: 需要拥有所有大厅服务器组的IP信息，这个信息在服
 // 大厅服务器组, 地区部署粒度中，实时性需求中高
 Ping-Server: 提供Http Server,返回大厅服务器地址
 
-Hall-Server: 无状态、通过Docker\k8s管理。实现商城等功能，单点故障后玩家通过重新向Ping-Server获取Hall-Server地址实现重连
+Hall-Server: 无状态,实现商城等功能，单点故障后玩家通过重新向Ping-Server获取Hall-Server地址实现重连
 
 Master: 管理Hall-Server的扩容与销毁，向服务器公告牌注册大厅服务器信息并keep-alive，注册的信息有过期时间，而Master需要一直保持不过期
 ```
@@ -34,7 +34,7 @@ Master: 管理Hall-Server的扩容与销毁，向服务器公告牌注册大厅�
 // 逻辑服务器组，地区部署粒度高，实时性需求高
 Ping-Server: 提供Http Server,返回用户请求，确定延迟
 
-Game-Server: 无状态、通过Docker\k8s管理。实现游戏具体业务，例如PUBG、Dota一局游戏的具体逻辑，单点故障后游戏终止，
+Game-Server: 无状态,实现游戏具体业务，例如PUBG、Dota一局游戏的具体逻辑，单点故障后游戏终止，
 
              可视具体游戏类型决定是否可以在其他Game-Server上恢复游戏(PUBG、Dota这种多人的一般不行，因为游戏数据要同步到内存外消耗巨大，得不偿失)
 
