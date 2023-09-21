@@ -1,0 +1,5 @@
+{
+    "serverBulletinBoardAddress": "http://localhost:9000/",
+    "pingServerCount": 1,
+    "HallServerCount": 2
+}
