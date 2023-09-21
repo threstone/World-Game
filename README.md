@@ -27,7 +27,7 @@ Ping-Server: 提供Http Server,返回大厅服务器地址
 
 Hall-Server: 无状态,实现商城等功能，单点故障后玩家通过重新向Ping-Server获取Hall-Server地址实现重连
 
-Master: 管理Hall-Server的扩容与销毁，向服务器公告牌注册大厅服务器信息并keep-alive，注册的信息有过期时间，而Master需要一直保持不过期
+Master: 管理Hall-Server的扩容与销毁，向服务器公告牌注册Ping-Server信息并keep-alive，注册的信息有过期时间，而Master需要一直保持不过期
 ```
 
 ```
