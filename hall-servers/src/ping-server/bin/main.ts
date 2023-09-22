@@ -1,7 +1,13 @@
 import { HttpServer } from "../HttpServer";
 import { configure } from 'log4js';
-import * as serverConfig from '../../../config/ping-server/config.json';
 import * as loggerConfig from '../../../config/ping-server/log4js.json';
 
+// config log4js
 configure(loggerConfig);
-new HttpServer(serverConfig.port);
+
+// get port from the startup param
+const port  = parseInt(process.argv[2]);
+if(!isNaN(port)){
+    // create a simple http server
+    new HttpServer(port);
+}

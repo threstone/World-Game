@@ -1,48 +1,64 @@
-import * as Cluster from 'cluster';
-import { getLogger } from 'log4js';
+import { Logger, getLogger } from 'log4js';
 import * as ChildProcess from 'child_process';
 
-const logger = getLogger();
 export abstract class BaseWorker {
 
-    protected _worker: Cluster.Worker;
     protected _execPath: string;
+    private _args: ReadonlyArray<string>;
+    private _options: ChildProcess.ForkOptions;
+    private _name: string;
 
-    fork(args?: any[]) {
+    worker: ChildProcess.ChildProcess;
+    exitedAfterKill: boolean = false;
+    autuResume: boolean;
+
+    logger: Logger
+
+    constructor(autuResume = false) {
+        this.autuResume = autuResume;
+        this._name = Object.getPrototypeOf(this).constructor.name;
+        this.logger = getLogger(this._name)
+    }
+
+    fork(args?: ReadonlyArray<string>, options?: ChildProcess.ForkOptions) {
         if (!this._execPath) {
-            logger.error('no execPath');
+            this.logger.error('no execPath');
             return;
         }
-        Cluster.setupMaster({
-            exec: this._execPath,
-            args,
-            silent: false
-        })
-        const worker = Cluster.fork();
-        this._worker = worker;
+        this._args = args;
+        this._options = options
+        this.initWorker();
+    }
+
+    private initWorker() {
+        const worker = ChildProcess.fork(this._execPath, this._args, this._options);
+        this.worker = worker;
+
         worker.on('exit', this.onExit.bind(this));
         worker.on('error', this.onError.bind(this));
         worker.on('message', this.onMessage.bind(this));
-
-        // const child = ChildProcess.fork(this._execPath, { silent: false })
-        // child.on('exit', this.onExit.bind(this));
-        // child.on('error', this.onError.bind(this));
-        // child.on('message', this.onMessage.bind(this));
     }
 
-    disconnect() {
-        this._worker.disconnect();
+    kill() {
+        this.logger.info(`kill worker${this.worker.pid}`);
+        this.exitedAfterKill = true;
+        process.kill(this.worker.pid);
     }
 
     onExit(code: number, signal: string) {
-        logger.info(`worker exit code: ${code}, signal: ${signal} , exitedAfterDisconnect: ${this._worker.exitedAfterDisconnect}`);
+        this.logger.info(`worker${this.worker.pid} exit code: ${code}, signal: ${signal}, exitedAfterKill: ${this.exitedAfterKill}`);
+        this.worker.removeAllListeners();
+        if (this.autuResume) {
+            this.logger.info(`worker${this.worker.pid} was exited, resume a new ${this._name}`)
+            this.initWorker();
+        }
     }
 
     onError(error: Error) {
-        logger.error(`worker got error: ${error}`);
+        this.logger.error(`worker${this.worker.pid} got error: ${error}`);
     }
 
     onMessage(message: any) {
-        logger.info(`worker message: ${message}`);
+        this.logger.info(`worker${this.worker.pid} message: ${message}`);
     }
 }
