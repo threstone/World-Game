@@ -26,11 +26,10 @@ export class HttpServer {
         const router = new Router();
         app.use(router.routes());
 
-        router.get('/getInterval', this.registerInterval.bind(this));
-        router.get('/registerServerInfo', this.registerServerInfo.bind(this));
-        router.get('/deleteServerInfo', this.deleteServerInfo.bind(this));
-        router.get('/getHallServerInfo', this.getHallServerInfo.bind(this));
-        router.get('/getLogicServerInfo', this.getLogicServerInfo.bind(this));
+        router.post('/getInterval', this.registerInterval.bind(this));
+        router.put('/registerServerInfo', this.registerServerInfo.bind(this));
+        router.delete('/deleteServerInfo', this.deleteServerInfo.bind(this));
+        router.get('/getServerInfo', this.getServerInfo.bind(this));
     }
 
     private async vaildCheck(ctx: Koa.Context, next: Koa.Next) {
@@ -40,31 +39,51 @@ export class HttpServer {
             await next();
         } else {
             ctx.response.body = "Access Denied";
+            ctx.response.status = 401;
         }
     }
 
+    /** get register interval */
     private async registerInterval(ctx: Koa.Context, next: Koa.Next) {
         ctx.response.body = GloBalVar.boardMgr.registerInterval;
         await next();
     }
 
+    /** register server information */
     private async registerServerInfo(ctx: Koa.Context, next: Koa.Next) {
-        ctx.response.body = GloBalVar.boardMgr.registerServerInfo();
+        const body = ctx.request.body as any;
+        if (!body.uuid || !body.type || body.pingServerIps?.length === 0 || !GloBalVar.boardMgr.registerServerInfo(body.type, body.uuid, body.pingServerIps)) {
+            ctx.response.status = 400;
+            return;
+        }
+        ctx.response.body = 200;
         await next();
     }
 
+    /** delete server information */
     private async deleteServerInfo(ctx: Koa.Context, next: Koa.Next) {
-        ctx.response.body = GloBalVar.boardMgr.deleteServerInfo();
+        const body = ctx.request.body as any;
+        if (!body.uuid || !body.type || !GloBalVar.boardMgr.deleteServerInfo(body.type, body.uuid)) {
+            ctx.response.status = 400;
+            return;
+        }
+        ctx.response.body = 200;
         await next();
     }
 
-    private async getHallServerInfo(ctx: Koa.Context, next: Koa.Next) {
-        ctx.response.body = GloBalVar.boardMgr.getHallServerInfo();
-        await next();
-    }
-
-    private async getLogicServerInfo(ctx: Koa.Context, next: Koa.Next) {
-        ctx.response.body = GloBalVar.boardMgr.getHallServerInfo();
+    /** get the servers information by type */
+    private async getServerInfo(ctx: Koa.Context, next: Koa.Next) {
+        const body = ctx.request.body as any;
+        if (!body.type) {
+            ctx.response.status = 400;
+            return;
+        }
+        const result = GloBalVar.boardMgr.getServerInfo(body.type);
+        if (result === false) {
+            ctx.response.status = 400;
+            return;
+        }
+        ctx.response.body = result;
         await next();
     }
 }
